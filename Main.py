@@ -6,6 +6,7 @@ def draw_square_from_coordinate(screen, pos, n):
         return
     pygame.draw.rect(screen, (255,255,255), (math.floor(pos[0]/n)*n, math.floor(pos[1]/n)*n, n, n))
 
+#just handling that the square size is ok
 try:
     n = int(input('size of the square (grid is 800x600 and size must divide both):\n'))
     if 800 % n != 0 or 600 % n != 0:
