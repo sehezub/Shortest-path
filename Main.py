@@ -3,17 +3,20 @@ import math
 import time
 
 def save_and_draw(screen, n, buffer, pos):
-    if buffer.count(pos) >= 1:
+    if buffer.count(pos) >= 1 or pos[1] <= 24:
         return buffer
     else:
         buffer.append(pos)
-        draw_square_from_coordinate(screen, pos, n, (255,255,255))
+        pygame.draw.rect(screen, (255,255,255), (pos[0], pos[1], n, n))
         return buffer
 
-def draw_square_from_coordinate(screen, pos, n, color):
-    if pos[1] <= 24:
-        return
-    pygame.draw.rect(screen, color, (math.floor(pos[0]/n)*n, 25+(math.floor((pos[1]-25)/n))*n, n, n))
+def create_set_of_obst(states, n, s):
+    for saves in states:
+        for pos in saves:
+            s.add((pos[0]//n, (pos[1]-25)//n))
+            #print((pos[0]//n - pos[0]/n, (pos[1]-25)//n - (pos[1]-25)/n))
+    return s
+
 
 #just handling that the square size is ok
 try:
@@ -23,7 +26,7 @@ try:
 except (ValueError):
     while True:
         try:
-            n = int(input('size must be an int dividing both 800 and 600, try again\n'))
+            n = int(input('size must be an int dividing both 800 and 600, try again:\n'))
             if 800 % n != 0 or 600 % n != 0:
                 raise ValueError
             break
@@ -35,6 +38,8 @@ pygame.init()
 
 states = list()
 buffer = list()
+obstacles = set() #set containing 2-tuples of the obstacles
+
 is_hold_clicked = False
 
 screen = pygame.display.set_mode(size=(800,625))
@@ -43,27 +48,28 @@ pygame.display.set_caption('Path finder')
 pygame.draw.line(screen, (255,0,0), (0,24), (800,24))
 pygame.draw.rect(screen, (0,255,0), (0, 0 , 40, 20))
 
+#main loop
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            i = 0
-            for e in states:
-                i = i + len(e)
-            print(i)
+            print(create_set_of_obst(states, n, obstacles))
             raise SystemExit
 
         if is_hold_clicked:
-            buffer = save_and_draw(screen, n, buffer, pygame.mouse.get_pos())
+            buffer = save_and_draw(screen, n, buffer, (math.floor(pygame.mouse.get_pos()[0]/n)*n, 25+(math.floor((pygame.mouse.get_pos()[1]-25)/n))*n))
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if pygame.mouse.get_pos()[0] <= 40 and pygame.mouse.get_pos()[1] <= 20 and states != []:
                 for pos in states[-1]:
-                    draw_square_from_coordinate(screen, pos, n, (0,0,0))
+                    pygame.draw.rect(screen, (0, 0, 0), (pos[0], pos[1], n, n))
                 del states[-1]
+
+                for saves in states:
+                    for pos in saves:
+                        pygame.draw.rect(screen, (255, 255, 255), (pos[0], pos[1], n, n))
             else:
                 is_hold_clicked = True
-                #print(pygame.mouse.get_pos())
-                buffer = save_and_draw(screen, n, buffer, pygame.mouse.get_pos())
+                buffer = save_and_draw(screen, n, buffer, (math.floor(pygame.mouse.get_pos()[0]/n)*n, 25+(math.floor((pygame.mouse.get_pos()[1]-25)/n))*n))
 
         if event.type == pygame.MOUSEBUTTONUP:
             is_hold_clicked = False
